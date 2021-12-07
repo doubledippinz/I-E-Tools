@@ -2,41 +2,39 @@ def get_income():
     while True:
         try:
             income = int(input("Please enter your taxable income: "))
+            return income
         except ValueError:
             print("Sorry, I didn't understand that please enter taxable income as a number")
             continue
-        else:
-            break
-    return income
+
+
+
 
 def getpensioncontributions():
     while True:
         try:
             deductionpercent = int(input("(Relief at source) What percent pension contributions do you make? "))
-            return deductionpercent
+            oneoffcontribution = int(input("(one off contribution) How much do you intend to contribute to "
+                                           "your pension as a lump sum? "))
+            print("\n")
+            return deductionpercent, oneoffcontribution
         except ValueError:
             print("Sorry, please enter your percentage as a number only")
             continue
-        else:
-            break
 
-def reliefatsource(deductionpercent, income):
+
+
+
+def calculate_adjustedincome(deductionpercent, income, oneoffcontribution):
     basicrate = 0.2
-    totalcontribution = (deductionpercent / 100) * income
-    hmrccontribution = totalcontribution * basicrate
-    employeecontribution = totalcontribution - hmrccontribution
+    workplacecontribution = (deductionpercent / 100) * income
+    hmrcworkplacecontribution = workplacecontribution * basicrate
+    hmrclumpsumcontribution = oneoffcontribution * basicrate
+    employeecontribution = workplacecontribution - hmrcworkplacecontribution
+    adjustedincome = income - employeecontribution - oneoffcontribution
+    return adjustedincome, workplacecontribution, employeecontribution, hmrcworkplacecontribution, hmrclumpsumcontribution
 
-
-    print("Your total pension contribution is ", totalcontribution)
-    print("Out of that contribution,", employeecontribution, "is deducted from your salary and HMRC pay an additional", hmrccontribution, "into your pension.")
-
-    income = income - hmrccontribution
-
-    return income
-
-
-
-def calculate_tax(income):
+def calculate_tax(adjustedincome):
     basic = 0.2
     higher = 0.4
     additional = 0.45
@@ -45,52 +43,47 @@ def calculate_tax(income):
     additionalthreshold = 150000
     taperthreshold = 100000
 
-    if income <= basicthreshold:
-        return 0
+    if adjustedincome <= basicthreshold:
+        basic_tax = 0
+        higher_tax = 0
+        additional_tax = 0
+        tax = 0
+        return tax, basic_tax, higher_tax, additional_tax
 
-    elif income > basicthreshold and income < higherthreshold:
-        basic_tax = (income - basicthreshold) * basic
-        print("tax at 20%", basic_tax)
+    elif adjustedincome > basicthreshold and adjustedincome < higherthreshold:
+        basic_tax = (adjustedincome - basicthreshold) * basic
+        higher_tax = 0
+        additional_tax = 0
         tax = basic_tax
-        return tax
+        return tax, basic_tax, higher_tax, additional_tax
 
-    elif income > higherthreshold and income < additionalthreshold:
+    elif adjustedincome > higherthreshold and adjustedincome < additionalthreshold:
         reducedthreshold = 0
-        if income > taperthreshold:
-            taper = (income - taperthreshold) / 2
+        if adjustedincome > taperthreshold:
+            taper = (adjustedincome - taperthreshold) / 2
             remainingthreshold = basicthreshold - taper
             reducedthreshold = 12570
             reducedthreshold = reducedthreshold - remainingthreshold
             if reducedthreshold >= basicthreshold:
                 reducedthreshold = basicthreshold
-                print("basic threshold for higher earner reduced by: ", reducedthreshold)
-
-        higher_tax = (income - (higherthreshold - reducedthreshold)) * higher
+        additional_tax = 0
+        higher_tax = (adjustedincome - (higherthreshold - reducedthreshold)) * higher
         basic_tax = (higherthreshold - reducedthreshold) * basic
         tax = higher_tax + basic_tax
-        print ("tax at 40%", higher_tax)
-        print ("tax at 20%", basic_tax)
-        return tax
+        return tax, basic_tax, higher_tax, additional_tax
 
-    elif income >= additionalthreshold:
+    elif adjustedincome >= additionalthreshold:
         taper = (income - taperthreshold) / 2
         remainingthreshold = basicthreshold - taper
         reducedthreshold = 12570
         reducedthreshold = reducedthreshold - remainingthreshold
         if reducedthreshold >= basicthreshold:
             reducedthreshold = basicthreshold
-            print("basic threshold for higher earner reduced by: ", reducedthreshold)
-
-        additional_tax = (income - additionalthreshold) * additional
-        print ("tax at 45%: ", additional_tax)
-        (higherthreshold - reducedthreshold) * higher
+        additional_tax = (adjustedincome - additionalthreshold) * additional
         higher_tax = (additionalthreshold - higherthreshold + reducedthreshold) * higher
         basic_tax = (higherthreshold - reducedthreshold) * basic
         tax = additional_tax + higher_tax + basic_tax
-        print ("tax at 40%", higher_tax)
-        print ("tax at 20%", basic_tax)
-        return tax
-
+        return tax, basic_tax, higher_tax, additional_tax
 
 def calculate_ni(income):
     lowerlimit = 9568
@@ -99,35 +92,49 @@ def calculate_ni(income):
     rate2 = 0.02
     if income < lowerlimit:
         ni = 0
-        return ni
+        niband1, niband2 = 0, 0
+        return ni, niband1, niband2
     elif income >= lowerlimit and income <= upperlimit:
-        ni = (income - lowerlimit) * rate1
-        return ni
+        niband1 = (income - lowerlimit) * rate1
+        ni = niband1
+        niband2 = 0
+        return ni, niband1, niband2
     else:
-        band2 = (income - upperlimit) * rate2
-        band1 = (upperlimit - lowerlimit) * rate1
-        ni = band1 + band2
-        return ni
+        niband2 = (income - upperlimit) * rate2
+        niband1 = (upperlimit - lowerlimit) * rate1
+        ni = niband1 + niband2
+        return ni, niband1, niband2
 
-
-
-
-
-
-
-#Main Script
+#£Main Script## Gets user to input icome, pension contribution % and one off lump sum.  Displays tax breakdown
 income = get_income()
-deductionpercent = getpensioncontributions()
-reliefatsource(deductionpercent, income)
-tax = calculate_tax(income)
-nicontributions = calculate_ni(income)
-
+deductionpercent, oneoffcontribution = getpensioncontributions()
+adjustedincome, workplacecontribution, employeecontribution, hmrcworkplacecontribution, hmrclumpsumcontribution = calculate_adjustedincome(deductionpercent, income, oneoffcontribution)
+tax, basic_tax, higher_tax, additional_tax = calculate_tax(adjustedincome)
+nicontributions, band1, band2 = calculate_ni(income)
 netincome = income - nicontributions - tax
 
-print ("your income tax for the year is:", tax)
-print ("your national insurance contributions for the year are: ", nicontributions)
-print ("\n","your total net annual income is: ", netincome)
-print ("your net monthly income is: ", netincome / 12)
+print("Your tax position for the year is as follows: \n",
+       "\n Income taxed at 20%: ", basic_tax,
+       "\n Income taxed at 40%: ", higher_tax,
+       "\n Income taxed at 45%: ", additional_tax,
+       "\n Total income tax: ", tax,
+       "\n NI charged at 12%: ", band1,
+       "\n NI charged at 2%: ", band2,
+       "\n Total NI contributions: ", nicontributions,
+       "\n Total Taxs: ", tax + nicontributions, "Looks like HMRC have had your pants down!",
+        "\n \n,your total net annual income is: ", netincome,
+      "\n your net monthly income is: ", netincome / 12)
+
+print("Your total pension contribution this year is ", (workplacecontribution + oneoffcontribution), "\n",
+      employeecontribution, "is deducted directly from your payslip",
+      "\n", (oneoffcontribution * 0.8), "was paid in directly by you",
+      "\n", (hmrcworkplacecontribution + hmrclumpsumcontribution), "was paid in by Her Majesty.")
+
+##Calculate remaining allowances for pension contributions
+
+
+
+
 
 
 
