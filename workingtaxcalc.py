@@ -130,11 +130,10 @@ print("Your total pension contribution this year is ", (workplacecontribution + 
       "\n", (oneoffcontribution * 0.8), "was paid in directly by you",
       "\n", (hmrcworkplacecontribution + hmrclumpsumcontribution), "was paid in by Her Majesty.")
 
-##Calculate remaining allowances for pension contributions
+# Calculate remaining allowances for pension contributions, inc prev 3 years
 
+# Calculate pension contributions required to avoid tax traps (child benefit, annual allowance)
 
+# Calculate net income as a % of gross income for FIB / IP
 
-
-Test test test
-
-
+# Add Class 2 NI & Dividends to tax calc
