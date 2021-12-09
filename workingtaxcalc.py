@@ -22,7 +22,19 @@ def getpensioncontributions():
             print("Sorry, please enter your percentage as a number only")
             continue
 
+def getpreviouscontributions():
+    while True:
+        try:
+            madeprevcontributions = int(input("Have you made contributions in the previous 3 tax years? (please type yes or no) "))
+            if madeprevcontributions.lower() == 'yes':
 
+            if madeprevcontributions.lower() == 'no':
+
+            print("\n")
+            return
+        except ValueError:
+            print("Sorry, please enter yes or no only")
+            continue
 
 
 def calculate_adjustedincome(deductionpercent, income, oneoffcontribution):
@@ -128,9 +140,9 @@ print("Your tax position for the year is as follows: \n",
 print("Your total pension contribution this year is ", (workplacecontribution + oneoffcontribution), "\n",
       employeecontribution, "is deducted directly from your payslip",
       "\n", (oneoffcontribution * 0.8), "was paid in directly by you",
-      "\n", (hmrcworkplacecontribution + hmrclumpsumcontribution), "was paid in by Her Majesty.")
+      "\n", (hmrcworkplacecontribution + hmrclumpsumcontribution), "was paid in by HMRC.")
 
-# Calculate remaining allowances for pension contributions, inc prev 3 years
+
 
 # Calculate pension contributions required to avoid tax traps (child benefit, annual allowance)
 
@@ -138,8 +150,3 @@ print("Your total pension contribution this year is ", (workplacecontribution + 
 
 # Add Class 2 NI & Dividends to tax calc
 
-#testchange
-
-#test 2
-
-#test 2.5
