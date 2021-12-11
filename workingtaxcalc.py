@@ -97,7 +97,8 @@ def calculate_tax(adjustedincome):
                 reducedthreshold = basicthreshold
         additional_tax = 0
         higher_tax = (adjustedincome - (higherthreshold - reducedthreshold)) * higher
-        basic_tax = (higherthreshold - reducedthreshold) * basic
+        basic_tax = (higherthreshold - basicthreshold) * basic
+
         tax = higher_tax + basic_tax
         return tax, basic_tax, higher_tax, additional_tax
 
@@ -111,6 +112,7 @@ def calculate_tax(adjustedincome):
         additional_tax = (adjustedincome - additionalthreshold) * additional
         higher_tax = (additionalthreshold - higherthreshold + reducedthreshold) * higher
         basic_tax = (higherthreshold - reducedthreshold) * basic
+
         tax = additional_tax + higher_tax + basic_tax
         return tax, basic_tax, higher_tax, additional_tax
 
