@@ -5,22 +5,21 @@ currentyear = datetime.date.today().year
 def get_income():
     while True:
         try:
-            income = int(input("Please enter your taxable income: "))
-            return income
+            salary = int(input("Please enter your gross annual salary: "))
+            bonus = int(input("Please enter your comission or bonus for the year: "))
+            interestdividendincome = int(input("Please enter your income from interest payments or dividends for the year: "))
+            income = salary + bonus + interestdividendincome
+            return income, salary
         except ValueError:
             print("Sorry, I didn't understand that please enter taxable income as a number")
             continue
-
-
-
 
 def getpensioncontributions():
     while True:
         try:
             deductionpercent = int(input("(Relief at source) What percent pension contributions do you make? "))
-            oneoffcontribution = int(input("(one off contribution) How much do you intend to contribute to "
+            oneoffcontribution = int(input("(AE / Employer Pension one off contribution) How much do you intend to contribute to "
                                            "your pension as a lump sum this tax year? "))
-            print("\n")
             return deductionpercent, oneoffcontribution
         except ValueError:
             print("Sorry, please enter your percentage as a number only")
@@ -30,6 +29,7 @@ def getpreviouscontributions():
     while True:
         try:
             madeprevcontributions = (input("Have you made pension contributions in the previous 3 tax years? (please type yes or no) "))
+            print("Please note you must have been a member of a UK-registered pension scheme in each of the tax years you wish to carry forward from.")
             if madeprevcontributions == 'yes':
                 year3 = datetime.date.today().year - 3
                 year2 = datetime.date.today().year - 2
@@ -45,18 +45,43 @@ def getpreviouscontributions():
                 year1contribution = int(input())
 
                 return year3contribution, year2contribution, year1contribution
+
             elif madeprevcontributions.lower() == 'no':
-                print("no worked")
-                return
+
+                year3contribution = 0
+                year2contribution = 0
+                year1contribution = 0
+
+                return year3contribution, year2contribution, year1contribution
         except ValueError:
             print("Sorry, please enter yes or no only")
             return
             continue
 
+def calculate_carryforward(year3contribution, year2contribution, year1contribution):
 
-def calculate_adjustedincome(deductionpercent, income, oneoffcontribution):
+    carryforwardannualallowance = 40000
+
+    if year3contribution >= carryforwardannualallowance:
+        year3remainingallowance = 0
+    else:
+        year3remainingallowance = carryforwardannualallowance - year3contribution
+
+    if year2contribution >= carryforwardannualallowance:
+        year2remainingallowance = 0
+    else: year2remainingallowance = carryforwardannualallowance - year2contribution
+
+    if year1contribution >= carryforwardannualallowance:
+        year1remainingallowance = 0
+    else: year1remainingallowance = carryforwardannualallowance - year1contribution
+
+    carryforwardremaining = year1remainingallowance + year2remainingallowance + year3remainingallowance
+
+    return carryforwardremaining
+
+def calculate_adjustedincome(deductionpercent, salary, income, oneoffcontribution):
     basicrate = 0.2
-    workplacecontribution = (deductionpercent / 100) * income
+    workplacecontribution = (deductionpercent / 100) * salary
     hmrcworkplacecontribution = workplacecontribution * basicrate
     hmrclumpsumcontribution = oneoffcontribution * basicrate
     employeecontribution = workplacecontribution - hmrcworkplacecontribution
@@ -97,7 +122,8 @@ def calculate_tax(adjustedincome):
                 reducedthreshold = basicthreshold
         additional_tax = 0
         higher_tax = (adjustedincome - (higherthreshold - reducedthreshold)) * higher
-        basic_tax = (higherthreshold - reducedthreshold) * basic
+        basic_tax = (higherthreshold - basicthreshold) * basic
+
         tax = higher_tax + basic_tax
         return tax, basic_tax, higher_tax, additional_tax
 
@@ -111,6 +137,7 @@ def calculate_tax(adjustedincome):
         additional_tax = (adjustedincome - additionalthreshold) * additional
         higher_tax = (additionalthreshold - higherthreshold + reducedthreshold) * higher
         basic_tax = (higherthreshold - reducedthreshold) * basic
+
         tax = additional_tax + higher_tax + basic_tax
         return tax, basic_tax, higher_tax, additional_tax
 
@@ -137,28 +164,28 @@ def calculate_ni(income):
 #Main Script## Gets user to input icome, pension contribution % and one off lump sum.  Displays tax breakdown
 
 #User Inputs
-income = get_income()
+income, salary = get_income()
 deductionpercent, oneoffcontribution = getpensioncontributions()
 year3, year2, year1 = getpreviouscontributions()
 
 #Calculate Functions
-adjustedincome, workplacecontribution, employeecontribution, hmrcworkplacecontribution, hmrclumpsumcontribution = calculate_adjustedincome(deductionpercent, income, oneoffcontribution)
+adjustedincome, workplacecontribution, employeecontribution, hmrcworkplacecontribution, hmrclumpsumcontribution = calculate_adjustedincome(deductionpercent, salary, income, oneoffcontribution)
 tax, basic_tax, higher_tax, additional_tax = calculate_tax(adjustedincome)
 nicontributions, band1, band2 = calculate_ni(income)
-netincome = income - nicontributions - tax
+netincome = income - nicontributions - tax - oneoffcontribution
 
 #Report tax position
-print("Your tax position for the year is as follows: \n",
-       "\n Income taxed at 20%: ", basic_tax,
+print("\n Your tax position for the year is as follows:",
+       "\n\n Income taxed at 20%: ", basic_tax,
        "\n Income taxed at 40%: ", higher_tax,
        "\n Income taxed at 45%: ", additional_tax,
-       "\n Total income tax: ", tax,
-       "\n NI charged at 12%: ", band1,
+       "\n\n Total income tax: ", tax,
+       "\n\n NI charged at 12%: ", band1,
        "\n NI charged at 2%: ", band2,
-       "\n Total NI contributions: ", nicontributions,
-       "\n Total Taxs: ", tax + nicontributions, "Looks like HMRC have had your pants down!",
-       "\n \n Your total net annual income is: ", netincome,
-       "\n Your net monthly income is: ", netincome / 12)
+       "\n\n Total NI contributions: ", nicontributions,
+       "\n\n Total Taxs paid: ", tax + nicontributions,
+       "\n \n Net annual income: ", netincome,
+       "\n Net monthly income is: ", netincome / 12)
 
 #Report pension contributions and allowances
 print("Your total pension contribution this year is ", (workplacecontribution + oneoffcontribution),
